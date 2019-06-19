@@ -4,6 +4,50 @@ from typing import Optional, Match, List, Dict
 from urllib.request import urlopen
 
 
+class IssueStatus(IntEnum):
+    open = 1
+    closed = 2
+    all = 3
+
+
+class Issue:
+    def __init__(
+            self,
+            title: str,
+            id: int,
+            status: IssueStatus,
+            url: str,
+            number: int,
+            description: str,
+            author: str,
+            created: datetime.datetime,
+    ) -> None:
+        self.title = title
+        self.id = id
+        self.status = status
+        self.url = url
+        self.number = number
+        self.description = description
+        self.author = author
+        self.created = created
+
+    def __str__(self) -> str:
+        description = (
+            f"{self.description[:10]}..." if self.description is not None else "None"
+        )
+        return (
+            f"PullRequest("
+            f"title='{self.title}', "
+            f"id={self.id}, "
+            f"status='{self.status.name}', "
+            f"url='{self.url}', "
+            f"url='{self.number}', "
+            f"description='{description}', "
+            f"author='{self.author}', "
+            f"created='{self.created}')"
+        )
+
+
 class PRStatus(IntEnum):
     open = 1
     closed = 2
@@ -18,6 +62,7 @@ class PullRequest:
         id: int,
         status: PRStatus,
         url: str,
+        number: int,
         description: str,
         author: str,
         source_branch: str,
@@ -28,6 +73,7 @@ class PullRequest:
         self.id = id
         self.status = status
         self.url = url
+        self.number = number
         self.description = description
         self.author = author
         self.source_branch = source_branch
@@ -44,6 +90,7 @@ class PullRequest:
             f"id={self.id}, "
             f"status='{self.status.name}', "
             f"url='{self.url}', "
+            f"url='{self.number}', "
             f"description='{description}', "
             f"author='{self.author}', "
             f"source_branch='{self.source_branch}', "

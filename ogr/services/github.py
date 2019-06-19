@@ -10,10 +10,13 @@ from github import (
 )
 from github.GitRelease import GitRelease as GithubRelease
 from github.PullRequest import PullRequest as GithubPullRequest
+from github.Issue import Issue as GithubIssue
 
 from ogr.abstract import (
     GitUser,
     PullRequest,
+    IssueStatus,
+    Issue,
     PRComment,
     PRStatus,
     Release,
@@ -160,6 +163,15 @@ class GithubProject(BaseGitProject):
                 )
                 return None
         return self._construct_fork_project()
+
+    def get_issue_list(self, status: IssueStatus = IssueStatus.open) -> List[Issue]:
+        issues = self.github_repo.get_issues(
+            state=status.name, sort="updated", direction="desc"
+        )
+        try:
+            return [self._issue_from_github_object(issue) for issue in issues]
+        except UnknownObjectException:
+            return []
 
     def get_pr_list(self, status: PRStatus = PRStatus.open) -> List[PullRequest]:
         prs = self.github_repo.get_pulls(
@@ -310,12 +322,26 @@ class GithubProject(BaseGitProject):
             raise FileNotFoundError(f"File '{path}' on {ref} not found", ex)
 
     @staticmethod
+    def _issue_from_github_object(github_issue: GithubIssue) -> Issue:
+        return Issue(
+            title=github_issue.title,
+            id=github_issue.id,
+            status=IssueStatus[github_issue.state],
+            url=github_issue.html_url,
+            number=github_issue.html_url.split("/")[-1],
+            description=github_issue.body,
+            author=github_issue.user.name,
+            created=github_issue.created_at,
+        )
+
+    @staticmethod
     def _pr_from_github_object(github_pr: GithubPullRequest) -> PullRequest:
         return PullRequest(
             title=github_pr.title,
             id=github_pr.id,
             status=PRStatus[github_pr.state],
             url=github_pr.html_url,
+            number=github_pr.html_url.split("/")[-1],
             description=github_pr.body,
             author=github_pr.user.name,
             source_branch=github_pr.head.ref,
